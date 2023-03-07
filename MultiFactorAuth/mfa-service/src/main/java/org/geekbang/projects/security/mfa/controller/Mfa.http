@@ -1,0 +1,8 @@
+POST http://localhost:8080/userCredential/add
+Content-Type: application/json
+
+{
+  "username" : "tianyalan",
+  "password" : "12345"
+}
+###

@@ -1,0 +1,15 @@
+GET http://localhost:8081/login
+Accept: */*
+Cache-Control: no-cache
+username:tianyalan
+password:12345
+
+###
+
+GET http://localhost:8081/login
+Accept: */*
+Cache-Control: no-cache
+username:tianyalan
+code:124389 #根据具体情况做调整
+
+###
