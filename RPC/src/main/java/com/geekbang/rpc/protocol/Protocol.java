@@ -2,15 +2,15 @@ package com.geekbang.rpc.protocol;
 
 import java.io.Serializable;
 
-/*
-RpcProtocol
+/**
+ * RpcProtocol
  */
 public class Protocol implements Serializable {
 
     //接口名称（包括完整类路径）
     private String interfaceName;
     //调用方法名
-    private  String methodName;
+    private String methodName;
     //参数类型按照接口参数顺序定义
     private Class[] paramsTypes;
     //参数的数据值

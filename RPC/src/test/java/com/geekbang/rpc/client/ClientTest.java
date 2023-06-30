@@ -26,7 +26,6 @@ public class ClientTest {
         Object[] parameters = {userCode};
         String methodName = "getUserNameByCode";
 
-        Protocol transportMessage = new Protocol(interfaceName, methodName, paramsTypes, parameters);
-        return transportMessage;
+        return new Protocol(interfaceName, methodName, paramsTypes, parameters);
     }
 }

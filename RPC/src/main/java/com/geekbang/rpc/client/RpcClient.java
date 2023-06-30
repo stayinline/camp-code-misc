@@ -20,21 +20,20 @@ public class RpcClient {
 
     //RpcConnector + RpcInvoker
     @SuppressWarnings("resource")
-	public Object sendAndReceive(Protocol protocol) {
+    public Object sendAndReceive(Protocol protocol) {
         Object result = null;
 
         try {
             Socket socket = new Socket(serverAddress, serverPort);
+
             ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
+            // 将protocol中具体的类信息(方法名、参数值参和类型等)向socket传输
             objectOutputStream.writeObject(protocol);
 
             ObjectInputStream objectInputStream = new ObjectInputStream(socket.getInputStream());
+            // 将server端传输过来的数据读出来
             result = objectInputStream.readObject();
-        } catch (UnknownHostException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (ClassNotFoundException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
 

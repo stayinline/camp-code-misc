@@ -19,7 +19,9 @@ public class RpcServer {
     //线程池
     private int threadSize = 10;
     private ExecutorService threadPool;
-    //自定义缓存
+    /**
+     * 自定义缓存 k->接口全限定名称，v->具体实现类实例
+     */
     private Map<String, Object> servicePool;
     //服务端口
     private int port = 9000;
@@ -48,38 +50,29 @@ public class RpcServer {
         }
     }
 
-    //1. 实现Socket监听：RpcAcceptor
-    @SuppressWarnings("resource")
-	public void service() throws IOException {
+    /**
+     * 1. 实现Socket监听：RpcAcceptor
+     *
+     * @throws IOException
+     */
+    public void service() throws IOException {
         ServerSocket serverSocket = new ServerSocket(port);
         while (true) {
             Socket receiveSocket = serverSocket.accept();
             final Socket socket = receiveSocket;
 
             //执行请求
-            threadPool.execute(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        //2. 处理请求
-                        process(socket);
+            threadPool.execute(() -> {
+                        try {
+                            //2. 处理请求
+                            process(socket);
 
-                        socket.close();
-                    } catch(IOException e) {
-                        e.printStackTrace();
-                    } catch (InstantiationException e) {
-                        e.printStackTrace();
-                    } catch (InvocationTargetException e) {
-                        e.printStackTrace();
-                    } catch (NoSuchMethodException e) {
-                        e.printStackTrace();
-                    } catch (IllegalAccessException e) {
-                        e.printStackTrace();
-                    } catch (ClassNotFoundException e) {
-                        e.printStackTrace();
+                            socket.close();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
                     }
-                }
-            });
+            );
         }
     }
 
@@ -88,14 +81,14 @@ public class RpcServer {
 
         ObjectInputStream objectInputStream = new ObjectInputStream(receiveSocket.getInputStream());
 
-        Protocol transportMessage = (Protocol)objectInputStream.readObject();
+        Protocol transportMessage = (Protocol) objectInputStream.readObject();
 
         //调用服务
         Object result = call(transportMessage);
 
         ObjectOutputStream objectOutputStream = new ObjectOutputStream(receiveSocket.getOutputStream());
         objectOutputStream.writeObject(result);
-        objectOutputStream.close();;
+        objectOutputStream.close();
 
     }
 
@@ -103,29 +96,30 @@ public class RpcServer {
     private Object call(Protocol protocol) throws ClassNotFoundException, NoSuchMethodException,
             IllegalAccessException, InstantiationException, InvocationTargetException {
 
-        if(servicePool == null) {
+        if (servicePool == null) {
             synchronized (this) {
-                servicePool = new HashMap<String, Object>();
+                servicePool = new HashMap<>();
             }
         }
 
         //通过接口名称构建实现类
         String interfaceName = protocol.getInterfaceName();
         Object service = servicePool.get(interfaceName);
+        // 通过反射加载interfaceName具体指定的类信息
         Class<?> serviceClass = Class.forName(interfaceName);
 
         //判断servicePool对象是否存在，如果不存在，就创建新对象并放入池中
-        if(service == null) {
+        if (service == null) {
             synchronized (this) {
                 service = serviceClass.newInstance();
                 servicePool.put(interfaceName, service);
             }
         }
 
-        //通过实现类来构建方法
+        //通过实现类来构建方法，这里是通过方法名称，参数类型，来找到具体的那个方法
         Method method = serviceClass.getMethod(protocol.getMethodName(), protocol.getParamsTypes());
 
-        //通过反射来实现方法的执行
+        //最后通过反射来实现该方法的执行
         Object result = method.invoke(service, protocol.getParameters());
         return result;
     }
